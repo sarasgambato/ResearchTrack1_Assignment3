@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+
+<launch>
+	
+	<include file="$(find final_assignment)/launch/simulation_gmapping.launch"/>
+    	<include file="$(find final_assignment)/launch/move_base.launch"/>
+
+	<!-- Run the User Interface node -->
+	<node name = "UI" pkg = "final_assignment" type = "robot_UI" output = "screen" required = "true" launch-prefix="xterm -e"/>
+	
+	<!-- Run the node to control the robot via keyboard
+	<node name = "keyboard" pkg = "final_assignment" type = "keyboard_controller" output = "screen" launch-prefix="xterm -e"/>
+	
+	Run the node to make the robot move autonomously
+	<node name = "reachPoint" pkg = "final_assignment" type = "auto_controller" output = "screen" launch-prefix="xterm -e"/>
+	
+	 Run the teleop_twist_keyboard node
+	<node name="teleop_twist_keyboard" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" respawn="false" output="screen" launch-prefix="xterm -e"/-->
+  	
+</launch>
