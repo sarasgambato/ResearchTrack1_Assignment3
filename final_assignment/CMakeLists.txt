@@ -139,6 +139,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(robot_UI src/UI.cpp)
 add_executable(keyboard_controller src/keyboard.cpp)
+##add_executable(assisted_controller src/assisted.cpp)
 add_executable(auto_controller src/reachPoint.cpp)
 
 ## Rename C++ executable without prefix
@@ -152,6 +153,7 @@ add_executable(auto_controller src/reachPoint.cpp)
 add_dependencies(robot_UI ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(keyboard_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(auto_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+##add_dependencies(assisted_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(robot_UI
@@ -163,6 +165,9 @@ target_link_libraries(keyboard_controller
 target_link_libraries(auto_controller
   ${catkin_LIBRARIES}
 )
+##target_link_libraries(assisted_controller
+ ## ${catkin_LIBRARIES}
+##)
 
 #############
 ## Install ##

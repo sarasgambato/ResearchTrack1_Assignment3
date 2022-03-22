@@ -1,17 +1,18 @@
 #include "ros/ros.h"
 #include "std_srvs/Empty.h"
 #include "stdio.h"
-#include "time.h"
 
 std_srvs::Empty rst;
 
 std::string menu = R"(
+***********************************************
 Choose how to control the robot:
-Press: \t1 to make the robot reach a point autonomously
-Press: \t2 to drive the robot with the keyboard
+Press:	1 to make the robot reach a point autonomously
+Press:	2 to drive the robot with the keyboard
 				
-Press: \tr/R to reset the simulation
-Press: \te/E to exit the program
+Press:	r/R to reset the simulation
+Press:	e/E to exit the program
+***********************************************
 )";
 
 char getInput()
@@ -42,7 +43,8 @@ int main(int argc, char **argv)
         			break;
         			
         		case '2':
-        			system("rosrun final_assignment keyboard_controller");
+        			system("roslaunch final_assignment keyboard.launch");
+        			system("clear");
         			break;
         			
         		case 'r':
