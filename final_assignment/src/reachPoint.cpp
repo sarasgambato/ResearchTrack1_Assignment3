@@ -91,6 +91,7 @@ void setGoal()
 	pubG.publish(goal);
 }
 
+
 void cancelGoal()
 {	/* Function to cancel the goal */
 
@@ -137,12 +138,14 @@ int main(int argc, char **argv)
     			case 'r':
         		case 'R':
         			ros::service::call("gazebo/reset_simulation", rst);
-    				cancelGoal();
+        			if(flag)
+    					cancelGoal();
         			break;
         			
     			case 'b':
     			case 'B':
-    				cancelGoal();
+    				if(flag)
+    					cancelGoal();
     				return 0;
     				break;
     				

@@ -1,6 +1,5 @@
 #include "ros/ros.h"
 #include "std_srvs/Empty.h"
-#include "stdio.h"
 
 std_srvs::Empty rst;
 

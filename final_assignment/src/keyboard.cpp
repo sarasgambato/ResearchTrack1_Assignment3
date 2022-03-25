@@ -12,11 +12,16 @@ geometry_msgs::Twist my_vel;
 // variable to set the modality
 bool assisted = false;
 
+// variable for the threshold of the wall
+float wall_th = 0.5;
+
 std::string menu = R"(
 ***********************************************
-Choose the modality:
+You chose to drive the robot manually!
+The default modality is the non-assisted keyboard.
+
 Press:	a/A to drive with the assisted keyboard
-Press:	n/N if you do not wish to use the assistance
+Press:	n/N to go back to the default modality
 
 Press:	r/R to reset the simulation
 Press:	b/B to go back to the main menu
@@ -54,11 +59,11 @@ float getMinimum(int start, int end, float distances[])
     return min;
 }
 
-void avoidCollision(const sensor_msgs::LaserScan::ConstPtr& msg)
+void avoidCollision(const sensor_msgs::LaserScan::ConstPtr &msg)
 {
 	if(assisted)
 	{
-	    	/* Function to avoid hitting the walls */
+	    	/* Callback to avoid hitting the walls */
 
 	    	// we know that the robot can see obstacles in a range of 180 degrees, and that it stores
 	    	// distances from obstacles in a vector with 720 elements, where the first element
@@ -75,28 +80,41 @@ void avoidCollision(const sensor_msgs::LaserScan::ConstPtr& msg)
 	    	float min_left = getMinimum(670, 719, distances);
 
 		// if the wall in front of the robot is too close, it cannot move forward
-		if (min_front < 1)
+		if (min_front < wall_th)
 		{
 			my_vel.linear.x = 0;
+			system("clear");
 			std::cout << "Detected wall in front of the robot. Turn left or right!\n";
 		}
 		
 		// if the wall on the right of the robot is too close, it can only go straight or turn left
-	    	if (min_right < 1 /*&& my_vel.angular.z < 0*/)
+	    	if (min_right < wall_th && my_vel.angular.z < 0)
 	    	{
 	    		my_vel.angular.z = 0;
+			system("clear");
 	    		std::cout << "Detected wall on the right side of the robot!\n";
 	    	}
 	    	
 	    	// if the wall on the left of the robot is too close, it can only go straight or turn right
-	    	if (min_left < 1 /*&& my_vel.angular.z > 0*/)
+	    	if (min_left < wall_th && my_vel.angular.z > 0)
 	    	{
 	    		my_vel.angular.z = 0;
+			system("clear");
 	    		std::cout << "Detected wall on the left side of the robot!\n";
 	    	}
 	    
 	    	pub.publish(my_vel);
     	}
+    	
+    	return;
+}
+
+void updateVel(const geometry_msgs::Twist::ConstPtr &msg)
+{
+	my_vel.linear.x = msg -> linear.x;
+	my_vel.angular.z = msg -> angular.z;
+	
+	pub.publish(my_vel);
 }
 
 int main(int argc, char **argv)
@@ -106,10 +124,14 @@ int main(int argc, char **argv)
 
     	pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
     	
+    	ros::Subscriber subC = nh.subscribe("/scan", 1, avoidCollision);
+    	ros::Subscriber subV = nh.subscribe("/cmd_key_vel", 1, updateVel);
+    	
+    	ros::AsyncSpinner spinner(4);
+  	spinner.start();
 	
 	while(1)
 	{
-    		ros::Subscriber sub = nh.subscribe("/scan", 1, avoidCollision);
 		switch(chooseMod())
 		{
 			case 'a':
@@ -124,7 +146,11 @@ int main(int argc, char **argv)
 			
 			case 'r':
         		case 'R':
+				my_vel.linear.x = 0;
+				my_vel.angular.z = 0;
+				pub.publish(my_vel);
         			ros::service::call("gazebo/reset_simulation", rst);
+        			assisted = false;
         			break;
 				
 			case 'b':
@@ -140,6 +166,8 @@ int main(int argc, char **argv)
         			break;
 		}
 	}
+	
+	spinner.stop();
 		
     	return 0;
 }
