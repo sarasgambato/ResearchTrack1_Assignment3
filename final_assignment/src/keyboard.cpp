@@ -13,7 +13,11 @@ geometry_msgs::Twist my_vel;
 bool assisted = false;
 
 // variable for the threshold of the wall
-float wall_th = 0.5;
+float wall_th = 1;
+
+// variables to temporarily store the velocities
+float lin;
+float ang;
 
 std::string menu = R"(
 ***********************************************
@@ -25,6 +29,14 @@ Press:	n/N to go back to the default modality
 
 Press:	r/R to reset the simulation
 Press:	b/B to go back to the main menu
+***********************************************
+)";
+
+std::string assisted_menu = R"(
+***********************************************
+You are in the assisted modality!
+
+Press:	n/N to go back to the default modality
 ***********************************************
 )";
 
@@ -45,21 +57,23 @@ char chooseMod()
 
 float getMinimum(int start, int end, float distances[])
 {
-    /* Function to get the minimum distance
-       Arguments:  - distances(float[]): array of distances from the obstacles, divided in subsections
+    	/* Function to get the minimum distance
+        Arguments:  - distances(float[]): array of distances from the obstacles, divided in subsections
                    - start(int): first point of the subsection
                    - end(int): last point of the subsection
-       Returns:    - min(float): minimum value of the subsection */
+        Returns:    - min(float): minimum value of the subsection */
     
-    float min = 50;
-    for(int i = start; i < end; i++) {
-        if (distances[i] < min)
-            min = distances[i];
-    }
-    return min;
+    	float min = 50;
+    	for(int i = start; i < end; i++) 
+    	{
+        	if (distances[i] < min)
+            		min = distances[i];
+    	}
+    	
+    	return min;
 }
 
-void avoidCollision(const sensor_msgs::LaserScan::ConstPtr &msg)
+void avoidCollision(const sensor_msgs::LaserScan::ConstPtr& msg)
 {
 	if(assisted)
 	{
@@ -69,56 +83,74 @@ void avoidCollision(const sensor_msgs::LaserScan::ConstPtr &msg)
 	    	// distances from obstacles in a vector with 720 elements, where the first element
 	    	// represents the distance on the far right and the last element represents the distance
 	    	// on the far left. So we get the minimum value of three subsections from this vector: right, left, front.
-
+	    	
+	    	
 	    	float distances[720];
 
 	    	for(int i = 0; i < 720; i++)
 			distances[i] = msg->ranges[i];
 
-	    	float min_right = getMinimum(0, 49, distances);
-	    	float min_front = getMinimum(310, 409, distances);
-	    	float min_left = getMinimum(670, 719, distances);
+	    	float min_right = getMinimum(0, 69, distances);
+	    	float min_front = getMinimum(300, 419, distances);
+	    	float min_left = getMinimum(650, 719, distances);
+	  
+    		my_vel.linear.x = lin;
+    		my_vel.angular.z = ang;
 
 		// if the wall in front of the robot is too close, it cannot move forward
 		if (min_front < wall_th)
 		{
 			my_vel.linear.x = 0;
-			system("clear");
+    			system("clear");
 			std::cout << "Detected wall in front of the robot. Turn left or right!\n";
 		}
 		
-		// if the wall on the right of the robot is too close, it can only go straight or turn left
-	    	if (min_right < wall_th && my_vel.angular.z < 0)
+		// if the wall on the left of the robot is too close, the robot turns right
+	    	else if (min_left < wall_th)
 	    	{
-	    		my_vel.angular.z = 0;
-			system("clear");
-	    		std::cout << "Detected wall on the right side of the robot!\n";
+	    		my_vel.angular.z = -1;
+    			system("clear");
+	    		std::cout << "Detected wall on the left of the robot! Turning right...\n";
 	    	}
 	    	
-	    	// if the wall on the left of the robot is too close, it can only go straight or turn right
-	    	if (min_left < wall_th && my_vel.angular.z > 0)
+	    	// if the wall on the right of the robot is too close, the robot turns left
+	    	else if (min_right < wall_th)
 	    	{
-	    		my_vel.angular.z = 0;
-			system("clear");
-	    		std::cout << "Detected wall on the left side of the robot!\n";
+	    		my_vel.angular.z = 1;
+    			system("clear");
+	    		std::cout << "Detected wall on the right of the robot! Turning left...\n";
 	    	}
-	    
+	    	
+	    	else
+	    	{
+    			system("clear");
+    			
+	    		// prompt the user
+    			std::cout << assisted_menu;
+    		}
+    		
 	    	pub.publish(my_vel);
     	}
     	
     	return;
 }
 
-void updateVel(const geometry_msgs::Twist::ConstPtr &msg)
+void updateVel(const geometry_msgs::Twist::ConstPtr& msg)
 {
-	my_vel.linear.x = msg -> linear.x;
-	my_vel.angular.z = msg -> angular.z;
+	/* Callback to update the velocity of the robot */
+	
+	lin = msg -> linear.x;
+	ang = msg -> angular.z;
+	
+	my_vel.linear.x = lin;
+	my_vel.angular.z = ang;
 	
 	pub.publish(my_vel);
 }
 
 int main(int argc, char **argv)
 {
+	// initialize the node, set up the NodeHandle for handling the communication with the ROS system
     	ros::init(argc, argv, "keyboard");
     	ros::NodeHandle nh;
 
@@ -149,8 +181,8 @@ int main(int argc, char **argv)
 				my_vel.linear.x = 0;
 				my_vel.angular.z = 0;
 				pub.publish(my_vel);
-        			ros::service::call("gazebo/reset_simulation", rst);
         			assisted = false;
+        			ros::service::call("gazebo/reset_simulation", rst);
         			break;
 				
 			case 'b':
@@ -163,6 +195,7 @@ int main(int argc, char **argv)
 				
 			default:
 				std::cout << "Wrong key pressed, please try again.\n";
+				sleep(2);
         			break;
 		}
 	}
