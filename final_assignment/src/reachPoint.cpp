@@ -14,7 +14,7 @@ float xCoord, yCoord;
 ros::Publisher pubG;
 ros::Publisher pubC;
 
-
+// declaration of subscribers
 ros::Subscriber subG;
 ros::Subscriber subS;
 
@@ -35,10 +35,10 @@ bool flag = false;
 
 std::string menu = R"(
 ***********************************************
+You chose to let the robot drive on its own!
 Press:	p/P to set the coordinates of the goal
 Press:	c/C to cancel the current goal
 
-Press:	r/R to reset the simulation
 Press:	b/B to go back to the main menu
 ***********************************************
 )";
@@ -204,13 +204,6 @@ int main(int argc, char **argv)
     			case 'C':
     				cancelGoal();
     				break;
-    				
-    			case 'r':
-        		case 'R':
-        			ros::service::call("gazebo/reset_simulation", rst);
-        			if(flag)
-    					cancelGoal();
-        			break;
         			
     			case 'b':
     			case 'B':

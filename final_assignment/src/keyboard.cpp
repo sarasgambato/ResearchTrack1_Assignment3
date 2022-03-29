@@ -25,9 +25,7 @@ You chose to drive the robot manually!
 The default modality is the non-assisted keyboard.
 
 Press:	a/A to drive with the assisted keyboard
-Press:	n/N to go back to the default modality
 
-Press:	r/R to reset the simulation
 Press:	b/B to go back to the main menu
 ***********************************************
 )";
@@ -175,15 +173,6 @@ int main(int argc, char **argv)
 			case 'N':
 				assisted = false;
 				break;
-			
-			case 'r':
-        		case 'R':
-				my_vel.linear.x = 0;
-				my_vel.angular.z = 0;
-				pub.publish(my_vel);
-        			assisted = false;
-        			ros::service::call("gazebo/reset_simulation", rst);
-        			break;
 				
 			case 'b':
 			case 'B':
